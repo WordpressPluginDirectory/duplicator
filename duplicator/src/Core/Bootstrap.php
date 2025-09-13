@@ -29,6 +29,7 @@ use Duplicator\Ajax\ServicesDashboard;
 use Duplicator\Ajax\ServicesEducation;
 use Duplicator\Ajax\ServicesExtraPlugins;
 use Duplicator\Ajax\ServicesTools;
+use Duplicator\Controllers\AboutUsController;
 use Duplicator\Controllers\EmailSummaryPreviewPageController;
 use Duplicator\Controllers\WelcomeController;
 use Duplicator\Core\Controllers\ControllersManager;
@@ -95,6 +96,7 @@ class Bootstrap
             }
 
             add_action('admin_init', array(__CLASS__, 'adminInit'));
+            add_action('in_admin_footer', array(__CLASS__, 'pluginFooter' ));
             add_action('admin_footer', array(__CLASS__, 'adjustProMenuItemClass'));
             add_action('admin_enqueue_scripts', array(__CLASS__, 'adminEqueueScripts'));
 
@@ -317,7 +319,10 @@ class Bootstrap
                 'callback'               => function () {
                     include(DUPLICATOR_PLUGIN_PATH . 'views/tools/controller.php');
                 },
-                'enqueue_style_callback' => array(__CLASS__, 'mocksStyles')
+                'enqueue_style_callback' => function () {
+                    AboutUsController::enqueues();
+                    self::mocksStyles();
+                }
             ),
             array(
                 'parent_slug'            => 'duplicator',
@@ -388,11 +393,11 @@ class Bootstrap
             'dup-one-click-upgrade-script',
             'dup_one_click_upgrade_script_data',
             array(
-                'nonce_one_click_upgrade'   => wp_create_nonce('duplicator_one_click_upgrade_prepare'),
+                'nonce_generate_connect_oth' => wp_create_nonce('duplicator_generate_connect_oth'),
                 'ajaxurl'                   => admin_url('admin-ajax.php'),
-                'fail_notice_title'         => __('Failed to activate license for this website.', 'duplicator'),
+                'fail_notice_title'         => __('Failed to connect to Duplicator Pro.', 'duplicator'),
                 'fail_notice_message_label' => __('Message: ', 'duplicator'),
-                'fail_notice_suggestion'    => __('Check the license key and try again, if the error persists proceed with manual activation.', 'duplicator'),
+                'fail_notice_suggestion'    => __('Please try again or contact support if the issue persists.', 'duplicator'),
             )
         );
 
@@ -456,6 +461,19 @@ class Bootstrap
                 }
             </style>
         <?php
+    }
+
+    /**
+     * Add the plugin footer
+     *
+     * @return void
+     */
+    public static function pluginFooter()
+    {
+        if (!ControllersManager::isDuplicatorPage()) {
+            return;
+        }
+        TplMng::getInstance()->render('parts/plugin-footer');
     }
 
     /**
